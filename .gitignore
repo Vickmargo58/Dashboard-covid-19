@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.DS_Store # macOS specific
+
+# Data (Aunque para este proyecto los CSVs sí los subimos)
+# data/*.csv
+data/*.db
+logs/
+*.log
+
+# IDEs
+.idea/
+.vscode/
+
+# Vercel specific
+.vercel/
