@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard COVID-19 - Análisis Global</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CSS para estilos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-4xl font-bold mb-2">
+                        <i class="fas fa-virus mr-3"></i>
+                        Dashboard COVID-19
+                    </h1>
+                    <p class="text-xl opacity-90">Análisis Global de Datos - Universidad Johns Hopkins</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-lg">Última actualización</p>
+                    <p class="text-2xl font-semibold" id="last-update">Cargando...</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Estadísticas Globales -->
+    <section class="container mx-auto px-6 py-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-globe mr-3 text-blue-600"></i>
+            Estadísticas Globales
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Casos Confirmados -->
+            <div class="stat-card bg-white rounded-lg p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Casos Confirmados</p>
+                        <p class="text-3xl font-bold text-blue-600" id="global-confirmed">
+                            <span class="loading"></span>
+                        </p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-users text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Muertes -->
+            <div class="stat-card bg-white rounded-lg p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Total de Muertes</p>
+                        <p class="text-3xl font-bold text-red-600" id="global-deaths">
+                            <span class="loading"></span>
+                        </p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <i class="fas fa-heart-broken text-red-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasa de Mortalidad -->
+            <div class="stat-card bg-white rounded-lg p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Tasa de Mortalidad</p>
+                        <p class="text-3xl font-bold text-orange-600" id="global-mortality">
+                            <span class="loading"></span>
+                        </p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-full">
+                        <i class="fas fa-percentage text-orange-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recuperados -->
+            <div class="stat-card bg-white rounded-lg p-6 card-shadow">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-medium">Recuperados</p>
+                        <p class="text-3xl font-bold text-green-600" id="global-recovered">
+                            <span class="loading"></span>
+                        </p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-heart text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gráficos y Análisis -->
+    <section class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Top Países por Casos -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-blue-600"></i>
+                    Top 10 Países - Casos Confirmados
+                </h3>
+                <div class="chart-container">
+                    <canvas id="topConfirmedChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Top Países por Muertes -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-red-600"></i>
+                    Top 10 Países - Muertes
+                </h3>
+                <div class="chart-container">
+                    <canvas id="topDeathsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Tasa de Mortalidad -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2 text-orange-600"></i>
+                    Top 10 Países - Tasa de Mortalidad
+                </h3>
+                <div class="chart-container">
+                    <canvas id="topMortalityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Casos Diarios México -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                    Casos Diarios - México
+                </h3>
+                <div class="chart-container">
+                    <canvas id="mexicoDailyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tablas de Datos -->
+    <section class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Tabla Top Países Contagios -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-table mr-2 text-blue-600"></i>
+                    Top 10 Países con Más Contagios
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">#</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">País</th>
+                                <th class="px-4 py-2 text-right text-sm font-medium text-gray-700">Casos</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-confirmed-table" class="divide-y divide-gray-200">
+                            <tr><td colspan="3" class="text-center py-4"><span class="loading"></span> Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tabla Top Países Muertes -->
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-table mr-2 text-red-600"></i>
+                    Top 10 Países con Más Muertes
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full table-auto">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">#</th>
+                                <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">País</th>
+                                <th class="px-4 py-2 text-right text-sm font-medium text-gray-700">Muertes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-deaths-table" class="divide-y divide-gray-200">
+                            <tr><td colspan="3" class="text-center py-4"><span class="loading"></span> Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-lg mb-2">Dashboard COVID-19 - Análisis de Datos Globales</p>
+            <p class="text-gray-400">Fuente: Universidad Johns Hopkins | Desarrollado con tecnologías web modernas</p>
+            <p class="text-gray-400 mt-2">Compatible con Linux Mint 22 | Flask + PostgreSQL</p>
+        </div>
+    </footer>
+
+    <script>
+        // Configuración de la API
+        const API_BASE_URL = '/api/covid';
+        
+        // Variables para los gráficos
+        let charts = {};
+
+        // Función para formatear números
+        function formatNumber(num) {
+            return new Intl.NumberFormat('es-ES').format(num);
+        }
+
+        // Función para cargar estadísticas globales
+        async function loadGlobalStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/global-stats`);
+                const data = await response.json();
+                
+                document.getElementById('global-confirmed').textContent = formatNumber(data.confirmed);
+                document.getElementById('global-deaths').textContent = formatNumber(data.deaths);
+                document.getElementById('global-mortality').textContent = `${data.mortality_rate}%`;
+                document.getElementById('global-recovered').textContent = formatNumber(data.recovered);
+                
+                // Actualizar fecha
+                document.getElementById('last-update').textContent = new Date().toLocaleDateString('es-ES');
+            } catch (error) {
+                console.error('Error cargando estadísticas globales:', error);
+            }
+        }
+
+        // Función para crear gráfico de barras horizontales
+        function createHorizontalBarChart(canvasId, data, label, color) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: label,
+                        data: data.values,
+                        backgroundColor: color,
+                        borderColor: color,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatNumber(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para crear gráfico de línea
+        function createLineChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            if (charts[canvasId]) {
+                charts[canvasId].destroy();
+            }
+            
+            charts[canvasId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.dates,
+                    datasets: [
+                        {
+                            label: 'Casos Diarios',
+                            data: data.daily_cases,
+                            borderColor: 'rgba(59, 130, 246, 0.8)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 1,
+                            fill: true
+                        },
+                        {
+                            label: 'Promedio Móvil 7 días',
+                            data: data.moving_average,
+                            borderColor: 'rgba(239, 68, 68, 1)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 3,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            ticks: {
+                                maxTicksLimit: 10
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return formatNumber(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Función para cargar gráficos
+        async function loadCharts() {
+            try {
+                // Top países por casos confirmados
+                const confirmedResponse = await fetch(`${API_BASE_URL}/chart-data/top-confirmed`);
+                const confirmedData = await confirmedResponse.json();
+                createHorizontalBarChart('topConfirmedChart', confirmedData, 'Casos Confirmados', 'rgba(59, 130, 246, 0.8)');
+
+                // Top países por muertes
+                const deathsResponse = await fetch(`${API_BASE_URL}/chart-data/top-deaths`);
+                const deathsData = await deathsResponse.json();
+                createHorizontalBarChart('topDeathsChart', deathsData, 'Muertes', 'rgba(239, 68, 68, 0.8)');
+
+                // Top países por tasa de mortalidad
+                const mortalityResponse = await fetch(`${API_BASE_URL}/chart-data/top-mortality`);
+                const mortalityData = await mortalityResponse.json();
+                createHorizontalBarChart('topMortalityChart', mortalityData, 'Tasa de Mortalidad (%)', 'rgba(245, 158, 11, 0.8)');
+
+                // Casos diarios México
+                const mexicoResponse = await fetch(`${API_BASE_URL}/chart-data/mexico-daily`);
+                const mexicoData = await mexicoResponse.json();
+                createLineChart('mexicoDailyChart', mexicoData);
+
+            } catch (error) {
+                console.error('Error cargando gráficos:', error);
+            }
+        }
+
+        // Función para cargar tablas
+        async function loadTables() {
+            try {
+                // Tabla top países confirmados
+                const confirmedResponse = await fetch(`${API_BASE_URL}/top-confirmed`);
+                const confirmedData = await confirmedResponse.json();
+                
+                const confirmedTableBody = document.getElementById('top-confirmed-table');
+                confirmedTableBody.innerHTML = '';
+                
+                confirmedData.forEach((country, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-sm font-medium text-gray-900">${index + 1}</td>
+                        <td class="px-4 py-2 text-sm text-gray-700">${country.Country_Region}</td>
+                        <td class="px-4 py-2 text-sm text-gray-700 text-right font-semibold">${formatNumber(country.confirmed)}</td>
+                    `;
+                    confirmedTableBody.appendChild(row);
+                });
+
+                // Tabla top países muertes
+                const deathsResponse = await fetch(`${API_BASE_URL}/top-deaths`);
+                const deathsData = await deathsResponse.json();
+                
+                const deathsTableBody = document.getElementById('top-deaths-table');
+                deathsTableBody.innerHTML = '';
+                
+                deathsData.forEach((country, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-4 py-2 text-sm font-medium text-gray-900">${index + 1}</td>
+                        <td class="px-4 py-2 text-sm text-gray-700">${country.Country_Region}</td>
+                        <td class="px-4 py-2 text-sm text-gray-700 text-right font-semibold">${formatNumber(country.deaths)}</td>
+                    `;
+                    deathsTableBody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error('Error cargando tablas:', error);
+            }
+        }
+
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGlobalStats();
+            loadCharts();
+            loadTables();
+        });
+    </script>
+</body>
+</html>
+
