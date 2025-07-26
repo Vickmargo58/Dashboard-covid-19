@@ -1,10 +1,4 @@
 #!/bin/bash
-
-# Dashboard COVID-19 - Script de Instalación Automatizada
-# Compatible con Linux Mint 22 y Ubuntu 22.04+
-# Autor: Manus AI
-# Fecha: Julio 2025
-
 set -e  # Salir en caso de error
 
 # Colores para output
