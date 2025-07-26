@@ -1,44 +1,59 @@
 import os
-import sys
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from flask import Flask, send_from_directory, jsonify
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from src.routes.covid import covid_bp # Importa el blueprint de rutas de COVID
 
-from flask import Flask, send_from_directory
-from flask_cors import CORS
-from src.routes.covid import covid_bp
+# --- Configuración de la Aplicación Flask ---
+app = Flask(__name__, static_folder='static')
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
+# --- Configuración de la Base de Datos ---
+# Obtener la URL de la base de datos de las variables de entorno de Vercel
+# Si no está definida (ej. en desarrollo local sin .env), puedes poner un valor por defecto o lanzar un error.
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Configurar CORS para permitir solicitudes desde cualquier origen
-CORS(app)
+if not DATABASE_URL:
+    # IMPORTANTE: Si estás desarrollando localmente sin una variable de entorno,
+    # puedes poner aquí tu URI de DB local para pruebas.
+    raise ValueError("DATABASE_URL environment variable not set. Cannot connect to database.")
 
-app.register_blueprint(user_bp, url_prefix='/api')
+# Crear el motor de SQLAlchemy
+engine = create_engine(DATABASE_URL)
+
+# Pasar el engine a la configuración de la aplicación para que otros módulos puedan acceder a él
+app.config['DB_ENGINE'] = engine
+app.config['DB_SESSION'] = sessionmaker(bind=engine) # Opcional: para manejar sesiones de forma más directa
+
+
+# --- Registro de Blueprints (Módulos de Rutas) ---
+# Registra el blueprint de COVID con su prefijo de URL
 app.register_blueprint(covid_bp, url_prefix='/api/covid')
 
-# uncomment if you need to use database
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
-with app.app_context():
-    db.create_all()
+# --- Rutas Adicionales ---
+# Ruta para servir el archivo HTML principal (el dashboard frontend)
+@app.route('/')
+def serve_index():
+    return send_from_directory(app.static_folder, 'index.html')
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    static_folder_path = app.static_folder
-    if static_folder_path is None:
-            return "Static folder not configured", 404
+# Ruta para servir otros archivos estáticos (CSS, JS, imágenes)
+@app.route('/<path:filename>')
+def serve_static(filename):
+    return send_from_directory(app.static_folder, filename)
 
-    if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
-        return send_from_directory(static_folder_path, path)
-    else:
-        index_path = os.path.join(static_folder_path, 'index.html')
-        if os.path.exists(index_path):
-            return send_from_directory(static_folder_path, 'index.html')
-        else:
-            return "index.html not found", 404
+# --- Manejo Global de Errores ---
+@app.errorhandler(500)
+def internal_server_error(e):
+    # Esto capturará cualquier 500 no manejado en las rutas
+    return jsonify({"error": "Internal Server Error", "message": str(e)}), 500
+
+@app.errorhandler(404)
+def not_found_error(e):
+    return jsonify({"error": "Not Found", "message": "La ruta solicitada no existe."}), 404
 
 
+# --- Inicio de la Aplicación (para desarrollo local) ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # Esto solo se ejecuta si corres main.py directamente (ej. python main.py)
+    # En Vercel, Gunicorn u otro servidor WSGI iniciará la app, no este bloque.
+    print(f"Flask app running on http://127.0.0.1:5000/")
+    app.run(debug=True, host='0.0.0.0', port=5000)
