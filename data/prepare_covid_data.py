@@ -87,7 +87,7 @@ print("Conectando a PostgreSQL y guardando datos...")
 
 
 # Tu cadena de conexión de Supabase (ASEGÚRATE DE REEMPLAZAR [YOUR-PASSWORD] CON TU CONTRASEÑA REAL)
-SUPABASE_CONNECTION_STRING = "postgresql://postgres:[Sf22g2gg_785]@db.mfdpoaxkmhkdttlogfzq.supabase.co:5432/postgres"
+SUPABASE_CONNECTION_STRING = "postgresql://postgres:iNyNoz4nA3fD6xmL@db.yahulcmoumuaadhzwyrq.supabase.co:5432/postgres"
 
 # SQLAlchemy URI para PostgreSQL
 engine = create_engine(SUPABASE_CONNECTION_STRING)
