@@ -23,13 +23,13 @@ def get_global_stats():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Date', 'Confirmed', 'Deaths'
+            # CORREGIDO: Usar 'confirmed', 'deaths', 'date' en MINÚSCULAS
             result = session.execute(text("""
                 SELECT
-                    SUM(Confirmed) AS total_confirmed,
-                    SUM(Deaths) AS total_deaths
+                    SUM(confirmed) AS total_confirmed,
+                    SUM(deaths) AS total_deaths
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
             """)).fetchone()
 
             if result:
@@ -66,19 +66,19 @@ def get_top_confirmed():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Date'
+            # CORREGIDO: Usar 'country_region', 'confirmed', 'date' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Country_Region, Confirmed
+                SELECT country_region, confirmed
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Confirmed > 0
-                GROUP BY Country_Region, Confirmed
-                ORDER BY Confirmed DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                AND confirmed > 0
+                GROUP BY country_region, confirmed
+                ORDER BY confirmed DESC
                 LIMIT 10
             """)).fetchall()
 
             top_countries = [
-                {"Country_Region": row.Country_Region, "confirmed": row.Confirmed}
+                {"Country_Region": row.country_region, "confirmed": row.confirmed} # Mapear al nombre original si el frontend lo espera
                 for row in result
             ]
             return jsonify(top_countries), 200
@@ -95,19 +95,19 @@ def get_top_deaths():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Deaths', 'Date'
+            # CORREGIDO: Usar 'country_region', 'deaths', 'date' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Country_Region, Deaths
+                SELECT country_region, deaths
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Deaths > 0
-                GROUP BY Country_Region, Deaths
-                ORDER BY Deaths DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                AND deaths > 0
+                GROUP BY country_region, deaths
+                ORDER BY deaths DESC
                 LIMIT 10
             """)).fetchall()
 
             top_deaths = [
-                {"Country_Region": row.Country_Region, "deaths": row.Deaths}
+                {"Country_Region": row.country_region, "deaths": row.deaths} # Mapear al nombre original si el frontend lo espera
                 for row in result
             ]
             return jsonify(top_deaths), 200
@@ -124,17 +124,17 @@ def get_top_mortality():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Deaths', 'Date'
+            # CORREGIDO: Usar 'country_region', 'confirmed', 'deaths', 'date' en MINÚSCULAS
             result = session.execute(text("""
                 SELECT
-                    Country_Region,
-                    SUM(Confirmed) AS total_confirmed,
-                    SUM(Deaths) AS total_deaths
+                    country_region,
+                    SUM(confirmed) AS total_confirmed,
+                    SUM(deaths) AS total_deaths
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                GROUP BY Country_Region
-                HAVING SUM(Confirmed) >= 1000
-                ORDER BY (SUM(Deaths)::NUMERIC / SUM(Confirmed)) DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                GROUP BY country_region
+                HAVING SUM(confirmed) >= 1000
+                ORDER BY (SUM(deaths)::NUMERIC / SUM(confirmed)) DESC
                 LIMIT 10
             """)).fetchall()
 
@@ -143,7 +143,7 @@ def get_top_mortality():
                 if row.total_confirmed > 0:
                     rate = (row.total_deaths / row.total_confirmed) * 100
                     top_mortality.append({
-                        "Country_Region": row.Country_Region,
+                        "Country_Region": row.country_region, # Mapear al nombre original si el frontend lo espera
                         "mortality_rate": f"{rate:.2f}"
                     })
             return jsonify(top_mortality), 200
@@ -161,24 +161,24 @@ def get_mexico_daily_cases():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Date', 'Confirmed_Daily', 'Deaths_Daily', 'Country_Region'
+            # CORREGIDO: Usar 'date', 'confirmed_daily', 'deaths_daily', 'country_region' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Date, Confirmed_Daily, Deaths_Daily
+                SELECT date, confirmed_daily, deaths_daily
                 FROM covid_data_unified
-                WHERE Country_Region = 'Mexico'
-                ORDER BY Date ASC
+                WHERE country_region = 'Mexico'
+                ORDER BY date ASC
             """)).fetchall()
 
-            dates = [row.Date.strftime('%Y-%m-%d') for row in result]
-            daily_cases = [row.Confirmed_Daily for row in result]
-            daily_deaths = [row.Deaths_Daily for row in result]
+            dates = [row.date.strftime('%Y-%m-%d') for row in result]
+            daily_cases = [row.confirmed_daily for row in result]
+            daily_deaths = [row.deaths_daily for row in result]
 
             # Calcular promedio móvil de 7 días para casos diarios
-            df_mexico = pd.DataFrame({'Date': dates, 'Confirmed_Daily': daily_cases})
+            df_mexico = pd.DataFrame({'Date': dates, 'Confirmed_Daily': daily_cases}) # Ojo: aquí pandas crea el DF con estos nombres, está bien.
             df_mexico['Moving_Average_7_Day'] = df_mexico['Confirmed_Daily'].rolling(window=7, min_periods=1).mean()
 
             response_data = {
-                "dates": df_mexico['Date'].tolist(),
+                "dates": df_mexico['Date'].tolist(), # Aquí usas 'Date' del DataFrame, no de la DB directamente
                 "daily_cases": df_mexico['Confirmed_Daily'].tolist(),
                 "daily_deaths": df_mexico['Deaths_Daily'].tolist(),
                 "moving_average_7_day": df_mexico['Moving_Average_7_Day'].tolist()
@@ -198,19 +198,19 @@ def chart_top_confirmed():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Date'
+            # CORREGIDO: Usar 'country_region', 'confirmed', 'date' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Country_Region, Confirmed
+                SELECT country_region, confirmed
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Confirmed > 0
-                GROUP BY Country_Region, Confirmed
-                ORDER BY Confirmed DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                AND confirmed > 0
+                GROUP BY country_region, confirmed
+                ORDER BY confirmed DESC
                 LIMIT 10
             """)).fetchall()
 
-            labels = [row.Country_Region for row in result]
-            values = [row.Confirmed for row in result]
+            labels = [row.country_region for row in result] # Usar el nombre de columna del resultado de la DB
+            values = [row.confirmed for row in result] # Usar el nombre de columna del resultado de la DB
 
             # Invertir para que el gráfico tenga el más grande arriba
             return jsonify({"labels": labels[::-1], "values": values[::-1]}), 200
@@ -226,19 +226,19 @@ def chart_top_deaths():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Deaths', 'Date'
+            # CORREGIDO: Usar 'country_region', 'deaths', 'date' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Country_Region, Deaths
+                SELECT country_region, deaths
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Deaths > 0
-                GROUP BY Country_Region, Deaths
-                ORDER BY Deaths DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                AND deaths > 0
+                GROUP BY country_region, deaths
+                ORDER BY deaths DESC
                 LIMIT 10
             """)).fetchall()
 
-            labels = [row.Country_Region for row in result]
-            values = [row.Deaths for row in result]
+            labels = [row.country_region for row in result] # Usar el nombre de columna del resultado de la DB
+            values = [row.deaths for row in result] # Usar el nombre de columna del resultado de la DB
 
             return jsonify({"labels": labels[::-1], "values": values[::-1]}), 200
 
@@ -253,17 +253,17 @@ def chart_top_mortality():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Deaths', 'Date'
+            # CORREGIDO: Usar 'country_region', 'confirmed', 'deaths', 'date' en MINÚSCULAS
             result = session.execute(text("""
                 SELECT
-                    Country_Region,
-                    SUM(Confirmed) AS total_confirmed,
-                    SUM(Deaths) AS total_deaths
+                    country_region,
+                    SUM(confirmed) AS total_confirmed,
+                    SUM(deaths) AS total_deaths
                 FROM covid_data_unified
-                WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                GROUP BY Country_Region
-                HAVING SUM(Confirmed) >= 1000
-                ORDER BY (SUM(Deaths)::NUMERIC / SUM(Confirmed)) DESC
+                WHERE date = (SELECT MAX(date) FROM covid_data_unified)
+                GROUP BY country_region
+                HAVING SUM(confirmed) >= 1000
+                ORDER BY (SUM(deaths)::NUMERIC / SUM(confirmed)) DESC
                 LIMIT 10
             """)).fetchall()
 
@@ -272,8 +272,8 @@ def chart_top_mortality():
             for row in result:
                 if row.total_confirmed > 0:
                     rate = (row.total_deaths / row.total_confirmed) * 100
-                    labels.append(row.Country_Region)
-                    values.append(float(f"{rate:.2f}")) # Asegurarse de que sea un float
+                    labels.append(row.country_region) # Usar el nombre de columna del resultado de la DB
+                    values.append(float(f"{rate:.2f}"))
 
             return jsonify({"labels": labels[::-1], "values": values[::-1]}), 200
 
@@ -288,20 +288,23 @@ def chart_mexico_daily():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # CORREGIDO: Usar 'Date', 'Confirmed_Daily', 'Deaths_Daily', 'Country_Region'
+            # CORREGIDO: Usar 'date', 'confirmed_daily', 'deaths_daily', 'country_region' en MINÚSCULAS
             result = session.execute(text("""
-                SELECT Date, Confirmed_Daily, Deaths_Daily
+                SELECT date, confirmed_daily, deaths_daily
                 FROM covid_data_unified
-                WHERE Country_Region = 'Mexico'
-                ORDER BY Date ASC
+                WHERE country_region = 'Mexico'
+                ORDER BY date ASC
             """)).fetchall()
 
-            df_mexico = pd.DataFrame([{"Date": row.Date, "Confirmed_Daily": row.Confirmed_Daily} for row in result])
+            # Ojo: aquí cuando creas el DataFrame con pandas, puedes usar los nombres Pythonic o los que devuelve la DB
+            # pandas creará columnas en el DF con los nombres exactos que le pasas en el dict o en el row.campo
+            df_mexico = pd.DataFrame([{"Date": row.date, "Confirmed_Daily": row.confirmed_daily, "Deaths_Daily": row.deaths_daily} for row in result])
             df_mexico['Moving_Average_7_Day'] = df_mexico['Confirmed_Daily'].rolling(window=7, min_periods=1).mean()
 
             response_data = {
-                "dates": [d.strftime('%Y-%m-%d') for d in df_mexico['Date'].tolist()], # Formatear fechas a string
+                "dates": [d.strftime('%Y-%m-%d') for d in df_mexico['Date'].tolist()],
                 "daily_cases": df_mexico['Confirmed_Daily'].tolist(),
+                "daily_deaths": df_mexico['Deaths_Daily'].tolist(),
                 "moving_average_7_day": df_mexico['Moving_Average_7_Day'].tolist()
             }
             return jsonify(response_data), 200
