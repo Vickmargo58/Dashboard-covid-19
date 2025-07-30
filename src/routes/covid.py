@@ -1,12 +1,14 @@
-from flask import Blueprint, jsonify, current_app, request # current_app para acceder al engine
-from sqlalchemy.sql import text # Para ejecutar consultas SQL
-import pandas as pd # Para cualquier procesamiento de datos si es necesario
+from flask import Blueprint, jsonify, current_app, request
+from sqlalchemy.sql import text
+import pandas as pd
 
 # Definir el Blueprint para las rutas de COVID-19
 covid_bp = Blueprint('covid', __name__)
 
 # Función para formatear grandes números (útil para consistencia)
 def format_large_number(num):
+    if num is None: # Manejo si el número es None
+        return "0"
     if num >= 1_000_000:
         return f"{num / 1_000_000:.2f}M"
     elif num >= 1_000:
@@ -18,15 +20,14 @@ def format_large_number(num):
 def get_global_stats():
     try:
         engine = current_app.config['DB_ENGINE']
-        Session = current_app.config['DB_SESSION'] # Obtener la fábrica de sesiones
+        Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # Asumiendo que covid_data_unified tiene los datos acumulados
-            # Query para obtener los totales más recientes para el mundo (última fecha en la tabla)
+            # CORREGIDO: Usar 'Date', 'Confirmed', 'Deaths'
             result = session.execute(text("""
                 SELECT
-                    SUM(confirmed) AS total_confirmed,
-                    SUM(deaths) AS total_deaths
+                    SUM(Confirmed) AS total_confirmed,
+                    SUM(Deaths) AS total_deaths
                 FROM covid_data_unified
                 WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
             """)).fetchone()
@@ -40,7 +41,7 @@ def get_global_stats():
                     mortality_rate = (total_deaths / total_confirmed) * 100
 
                 # Datos de recuperados no disponibles en el dataset más reciente, como se menciona en tus archivos
-                total_recovered = 0 # Valor por defecto, ya que los datos no están disponibles
+                total_recovered = 0 # Valor por defecto
 
                 response_data = {
                     "confirmed": total_confirmed,
@@ -65,13 +66,13 @@ def get_top_confirmed():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # Consulta para los 10 países con más casos confirmados en la última fecha
+            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Date'
             result = session.execute(text("""
                 SELECT Country_Region, Confirmed
                 FROM covid_data_unified
                 WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Confirmed > 0 -- Excluir países sin casos si los hay
-                GROUP BY Country_Region, Confirmed -- Agrupar para sumar si hay provincias
+                AND Confirmed > 0
+                GROUP BY Country_Region, Confirmed
                 ORDER BY Confirmed DESC
                 LIMIT 10
             """)).fetchall()
@@ -94,12 +95,12 @@ def get_top_deaths():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # Consulta para los 10 países con más muertes en la última fecha
+            # CORREGIDO: Usar 'Country_Region', 'Deaths', 'Date'
             result = session.execute(text("""
                 SELECT Country_Region, Deaths
                 FROM covid_data_unified
                 WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
-                AND Deaths > 0 -- Excluir países sin muertes
+                AND Deaths > 0
                 GROUP BY Country_Region, Deaths
                 ORDER BY Deaths DESC
                 LIMIT 10
@@ -123,8 +124,7 @@ def get_top_mortality():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # Consulta para calcular la tasa de mortalidad por país
-            # Necesitamos sumar confirmados y muertes por país en la última fecha
+            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Deaths', 'Date'
             result = session.execute(text("""
                 SELECT
                     Country_Region,
@@ -133,7 +133,7 @@ def get_top_mortality():
                 FROM covid_data_unified
                 WHERE Date = (SELECT MAX(Date) FROM covid_data_unified)
                 GROUP BY Country_Region
-                HAVING SUM(Confirmed) >= 1000 -- Solo países con al menos 1000 casos para una tasa significativa
+                HAVING SUM(Confirmed) >= 1000
                 ORDER BY (SUM(Deaths)::NUMERIC / SUM(Confirmed)) DESC
                 LIMIT 10
             """)).fetchall()
@@ -161,8 +161,7 @@ def get_mexico_daily_cases():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            # Obtener datos diarios para México
-            # Asegúrate de que Confirmed_Daily y Deaths_Daily se hayan calculado en prepare_covid_data.py
+            # CORREGIDO: Usar 'Date', 'Confirmed_Daily', 'Deaths_Daily', 'Country_Region'
             result = session.execute(text("""
                 SELECT Date, Confirmed_Daily, Deaths_Daily
                 FROM covid_data_unified
@@ -199,6 +198,7 @@ def chart_top_confirmed():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
+            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Date'
             result = session.execute(text("""
                 SELECT Country_Region, Confirmed
                 FROM covid_data_unified
@@ -226,6 +226,7 @@ def chart_top_deaths():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
+            # CORREGIDO: Usar 'Country_Region', 'Deaths', 'Date'
             result = session.execute(text("""
                 SELECT Country_Region, Deaths
                 FROM covid_data_unified
@@ -252,6 +253,7 @@ def chart_top_mortality():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
+            # CORREGIDO: Usar 'Country_Region', 'Confirmed', 'Deaths', 'Date'
             result = session.execute(text("""
                 SELECT
                     Country_Region,
@@ -286,8 +288,9 @@ def chart_mexico_daily():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
+            # CORREGIDO: Usar 'Date', 'Confirmed_Daily', 'Deaths_Daily', 'Country_Region'
             result = session.execute(text("""
-                SELECT Date, Confirmed_Daily
+                SELECT Date, Confirmed_Daily, Deaths_Daily
                 FROM covid_data_unified
                 WHERE Country_Region = 'Mexico'
                 ORDER BY Date ASC
