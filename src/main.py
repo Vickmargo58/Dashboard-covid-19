@@ -8,17 +8,13 @@ from src.routes.covid import covid_bp # Importa el blueprint de rutas de COVID
 app = Flask(__name__, static_folder='static')
 
 # --- Configuración de la Base de Datos ---
-# OBTENER LA URL DE LA BASE DE DATOS DIRECTAMENTE (SOLO PARA DEBUGGING)
-# ¡ADVERTENCIA DE SEGURIDAD: NO HACER ESTO EN PRODUCCIÓN!
-DATABASE_URL = "postgresql://postgres:iNyNoz4nA3fD6xmL@db.yahulcmoumuaadhzwyrq.supabase.co:5432/postgres"
-# Elimina completamente el bloque if not DATABASE_URL:
-# if not DATABASE_URL:
-#     raise ValueError("DATABASE_URL environment variable not set. Cannot connect to database.")
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable not set. Cannot connect to database.")
 
 # Crear el motor de SQLAlchemy
 engine = create_engine(DATABASE_URL)
-
-# ... (el resto del archivo main.py sigue igual)
 
 # Pasar el engine a la configuración de la aplicación para que otros módulos puedan acceder a él
 app.config['DB_ENGINE'] = engine

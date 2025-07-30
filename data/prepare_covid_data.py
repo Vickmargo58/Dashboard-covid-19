@@ -87,7 +87,7 @@ print("Conectando a PostgreSQL y guardando datos...")
 
 
 # Tu cadena de conexión de Supabase (ASEGÚRATE DE REEMPLAZAR [YOUR-PASSWORD] CON TU CONTRASEÑA REAL)
-SUPABASE_CONNECTION_STRING = "postgresql://postgres:iNyNoz4nA3fD6xmL@db.yahulcmoumuaadhzwyrq.supabase.co:5432/postgres"
+SUPABASE_CONNECTION_STRING = "postgresql://neondb_owner:npg_mnvahiJyLl90@ep-bitter-wave-ado1aw5m.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 # SQLAlchemy URI para PostgreSQL
 engine = create_engine(SUPABASE_CONNECTION_STRING)
