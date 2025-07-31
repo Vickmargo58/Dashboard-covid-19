@@ -1,22 +1,33 @@
-# src/main.py
 import os
 from flask import Flask, send_from_directory, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.routes.covid import covid_bp
+from src.routes.covid import covid_bp # Importa el blueprint de rutas de COVID
 
 # --- Configuración de la Aplicación Flask ---
 app = Flask(__name__, static_folder='static')
 
 # --- Configuración de la Base de Datos ---
+# Obtener la URL de la base de datos de las variables de entorno de Vercel
+# Si no está definida (ej. en desarrollo local sin .env), puedes poner un valor por defecto o lanzar un error.
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 # --- LÍNEA DE DIAGNÓSTICO TEMPORAL ---
 print(f"DIAGNÓSTICO VERCEL: Valor de DATABASE_URL obtenido: {DATABASE_URL}")
-
+# ------------------------------------
 
 if not DATABASE_URL:
+    # IMPORTANTE: Si estás desarrollando localmente sin una variable de entorno,
+    # puedes poner aquí tu URI de DB local para pruebas.
     raise ValueError("DATABASE_URL environment variable not set. Cannot connect to database.")
+
+# Crear el motor de SQLAlchemy
+engine = create_engine(DATABASE_URL)
+
+# Pasar el engine a la configuración de la aplicación para que otros módulos puedan acceder a él
+app.config['DB_ENGINE'] = engine
+app.config['DB_SESSION'] = sessionmaker(bind=engine) # Opcional: para manejar sesiones de forma más directa
+
 
 # --- Registro de Blueprints (Módulos de Rutas) ---
 # Registra el blueprint de COVID con su prefijo de URL
