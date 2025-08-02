@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard COVID-19 - Análisis Global</title>
+    <title>Dashboard COVID-19 - Análisis Global por Mario Fernandez Castillo</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     
-    <!-- Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- Tailwind CSS para estilos -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Font Awesome para iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
@@ -50,7 +47,6 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
     <header class="gradient-bg text-white shadow-lg">
         <div class="container mx-auto px-6 py-8">
             <div class="flex items-center justify-between">
@@ -69,7 +65,6 @@
         </div>
     </header>
 
-    <!-- Estadísticas Globales -->
     <section class="container mx-auto px-6 py-8">
         <h2 class="text-3xl font-bold text-gray-800 mb-6">
             <i class="fas fa-globe mr-3 text-blue-600"></i>
@@ -77,7 +72,6 @@
         </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <!-- Casos Confirmados -->
             <div class="stat-card bg-white rounded-lg p-6 card-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -92,7 +86,6 @@
                 </div>
             </div>
 
-            <!-- Muertes -->
             <div class="stat-card bg-white rounded-lg p-6 card-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -107,7 +100,6 @@
                 </div>
             </div>
 
-            <!-- Tasa de Mortalidad -->
             <div class="stat-card bg-white rounded-lg p-6 card-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -122,7 +114,6 @@
                 </div>
             </div>
 
-            <!-- Recuperados -->
             <div class="stat-card bg-white rounded-lg p-6 card-shadow">
                 <div class="flex items-center justify-between">
                     <div>
@@ -139,10 +130,8 @@
         </div>
     </section>
 
-    <!-- Gráficos y Análisis -->
     <section class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Top Países por Casos -->
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-chart-bar mr-2 text-blue-600"></i>
@@ -153,7 +142,6 @@
                 </div>
             </div>
 
-            <!-- Top Países por Muertes -->
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-chart-bar mr-2 text-red-600"></i>
@@ -164,7 +152,6 @@
                 </div>
             </div>
 
-            <!-- Tasa de Mortalidad -->
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-chart-line mr-2 text-orange-600"></i>
@@ -174,24 +161,42 @@
                     <canvas id="topMortalityChart"></canvas>
                 </div>
             </div>
-
-            <!-- Casos Diarios México -->
+            
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
-                    <i class="fas fa-chart-line mr-2 text-green-600"></i>
+                    <i class="fas fa-chart-bar mr-2 text-green-600"></i>
+                    Top 10 Países - Menor Tasa de Mortalidad
+                </h3>
+                <div class="chart-container">
+                    <canvas id="lowMortalityChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
                     Casos Diarios - México
                 </h3>
                 <div class="chart-container">
                     <canvas id="mexicoDailyChart"></canvas>
                 </div>
             </div>
+
+            <div class="bg-white rounded-lg p-6 card-shadow">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                    <i class="fas fa-chart-line mr-2 text-purple-600"></i>
+                    Histórico Global de Casos Recuperados
+                </h3>
+                <div class="chart-container">
+                    <canvas id="globalRecoveredChart"></canvas>
+                </div>
+            </div>
+
         </div>
     </section>
 
-    <!-- Tablas de Datos -->
     <section class="container mx-auto px-6 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Tabla Top Países Contagios -->
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-table mr-2 text-blue-600"></i>
@@ -213,7 +218,6 @@
                 </div>
             </div>
 
-            <!-- Tabla Top Países Muertes -->
             <div class="bg-white rounded-lg p-6 card-shadow">
                 <h3 class="text-2xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-table mr-2 text-red-600"></i>
@@ -237,7 +241,6 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8 mt-12">
         <div class="container mx-auto px-6 text-center">
             <p class="text-lg mb-2">Dashboard COVID-19</p>
@@ -267,7 +270,7 @@
                 document.getElementById('global-confirmed').textContent = formatNumber(data.confirmed);
                 document.getElementById('global-deaths').textContent = formatNumber(data.deaths);
                 document.getElementById('global-mortality').textContent = `${data.mortality_rate}%`;
-                document.getElementById('global-recovered').textContent = formatNumber(data.recovered);
+                document.getElementById('global-recovered').textContent = formatNumber(data.recovered); // Ahora usa el valor de la DB
                 
                 // Actualizar fecha
                 document.getElementById('last-update').textContent = new Date().toLocaleDateString('es-ES');
@@ -319,36 +322,53 @@
             });
         }
 
-        // Función para crear gráfico de línea
-        function createLineChart(canvasId, data) {
+        // Función para crear gráfico de línea (adaptada para recuperados también)
+        function createLineChart(canvasId, data, lineLabel, lineColor, fill=false) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             
             if (charts[canvasId]) {
                 charts[canvasId].destroy();
             }
             
+            let datasets = [];
+            if (canvasId === 'mexicoDailyChart') { // Lógica específica para México
+                datasets = [
+                    {
+                        label: 'Casos Diarios',
+                        data: data.daily_cases,
+                        borderColor: 'rgba(59, 130, 246, 0.8)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 1,
+                        fill: true
+                    },
+                    {
+                        label: 'Promedio Móvil 7 días',
+                        data: data.moving_average,
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        fill: false
+                    }
+                ];
+            } else if (canvasId === 'globalRecoveredChart') { // Lógica específica para recuperados
+                datasets = [
+                    {
+                        label: lineLabel,
+                        data: data.recovered_cases,
+                        borderColor: lineColor,
+                        backgroundColor: 'rgba(128, 0, 128, 0.1)', // Un poco de púrpura claro
+                        borderWidth: 2,
+                        fill: fill
+                    }
+                ];
+            }
+
+
             charts[canvasId] = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.dates,
-                    datasets: [
-                        {
-                            label: 'Casos Diarios',
-                            data: data.daily_cases,
-                            borderColor: 'rgba(59, 130, 246, 0.8)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 1,
-                            fill: true
-                        },
-                        {
-                            label: 'Promedio Móvil 7 días',
-                            data: data.moving_average,
-                            borderColor: 'rgba(239, 68, 68, 1)',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            borderWidth: 3,
-                            fill: false
-                        }
-                    ]
+                    datasets: datasets
                 },
                 options: {
                     responsive: true,
@@ -392,15 +412,25 @@
                 const deathsData = await deathsResponse.json();
                 createHorizontalBarChart('topDeathsChart', deathsData, 'Muertes', 'rgba(239, 68, 68, 0.8)');
 
-                // Top países por tasa de mortalidad
+                // Top países por tasa de mortalidad (Alta)
                 const mortalityResponse = await fetch(`${API_BASE_URL}/chart-data/top-mortality`);
                 const mortalityData = await mortalityResponse.json();
                 createHorizontalBarChart('topMortalityChart', mortalityData, 'Tasa de Mortalidad (%)', 'rgba(245, 158, 11, 0.8)');
+                
+                // NUEVO: Top 10 Países con Menor Tasa de Mortalidad
+                const lowMortalityResponse = await fetch(`${API_BASE_URL}/chart-data/low-mortality`);
+                const lowMortalityData = await lowMortalityResponse.json();
+                createHorizontalBarChart('lowMortalityChart', lowMortalityData, 'Tasa de Mortalidad (%)', 'rgba(16, 185, 129, 0.8)'); // Un verde para bajas tasas
 
                 // Casos diarios México
                 const mexicoResponse = await fetch(`${API_BASE_URL}/chart-data/mexico-daily`);
                 const mexicoData = await mexicoResponse.json();
                 createLineChart('mexicoDailyChart', mexicoData);
+
+                // NUEVO: Histórico Global de Casos Recuperados
+                const recoveredHistoricalResponse = await fetch(`${API_BASE_URL}/chart-data/global-recovered-historical`);
+                const recoveredHistoricalData = await recoveredHistoricalResponse.json();
+                createLineChart('globalRecoveredChart', recoveredHistoricalData, 'Casos Recuperados', 'rgba(128, 0, 128, 0.8)', true); // Púrpura, con relleno
 
             } catch (error) {
                 console.error('Error cargando gráficos:', error);
@@ -458,4 +488,3 @@
     </script>
 </body>
 </html>
-
