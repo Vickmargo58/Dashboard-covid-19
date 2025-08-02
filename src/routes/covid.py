@@ -225,20 +225,32 @@ def chart_global_recovered_historical():
 
 # --- Endpoint 5: Datos de México (Casos Diarios y Promedio Móvil) ---
 @covid_bp.route('/mexico-daily', methods=['GET'])
-def get_mexico_daily_cases():
+def chart_mexico_daily(): # Renombrado para consistencia con la lógica del frontend (antes era get_mexico_daily_cases)
     try:
         engine = current_app.config['DB_ENGINE']
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
+            # Filtra solo los registros donde Confirmed_Daily sea mayor a 0
+            # para ver la curvatura real y no los periodos planos
             result = session.execute(text("""
                 SELECT "Date", "Confirmed_Daily", "Deaths_Daily"
                 FROM covid_data_unified
-                WHERE "Country_Region" = 'Mexico'
+                WHERE "Country_Region" = 'Mexico' AND "Confirmed_Daily" > 0
                 ORDER BY "Date" ASC
             """)).fetchall()
 
             df_mexico = pd.DataFrame([{"Date": row.Date, "Confirmed_Daily": row.Confirmed_Daily, "Deaths_Daily": row.Deaths_Daily} for row in result])
+            
+            # Si el DataFrame está vacío después del filtro, devuelve datos vacíos
+            if df_mexico.empty:
+                return jsonify({
+                    "dates": [],
+                    "daily_cases": [],
+                    "daily_deaths": [],
+                    "moving_average_7_day": []
+                }), 200
+
             df_mexico['Moving_Average_7_Day'] = df_mexico['Confirmed_Daily'].rolling(window=7, min_periods=1).mean()
 
             response_data = {
@@ -340,32 +352,3 @@ def chart_top_mortality():
     except Exception as e:
         current_app.logger.error(f"Error al preparar datos de gráfico top mortalidad: {e}")
         return jsonify({"error": "Error de datos", "message": "No se pudieron preparar los datos para el gráfico de tasa de mortalidad."}), 500
-
-@covid_bp.route('/chart-data/mexico-daily', methods=['GET'])
-def chart_mexico_daily():
-    try:
-        engine = current_app.config['DB_ENGINE']
-        Session = current_app.config['DB_SESSION']
-
-        with Session() as session:
-            result = session.execute(text("""
-                SELECT "Date", "Confirmed_Daily", "Deaths_Daily"
-                FROM covid_data_unified
-                WHERE "Country_Region" = 'Mexico'
-                ORDER BY "Date" ASC
-            """)).fetchall()
-
-            df_mexico = pd.DataFrame([{"Date": row.Date, "Confirmed_Daily": row.Confirmed_Daily, "Deaths_Daily": row.Deaths_Daily} for row in result])
-            df_mexico['Moving_Average_7_Day'] = df_mexico['Confirmed_Daily'].rolling(window=7, min_periods=1).mean()
-
-            response_data = {
-                "dates": [d.strftime('%Y-%m-%d') for d in df_mexico['Date'].tolist()],
-                "daily_cases": df_mexico['Confirmed_Daily'].tolist(),
-                "daily_deaths": df_mexico['Deaths_Daily'].tolist(),
-                "moving_average_7_day": df_mexico['Moving_Average_7_Day'].tolist()
-            }
-            return jsonify(response_data), 200
-
-    except Exception as e:
-        current_app.logger.error(f"Error al obtener datos diarios de México: {e}")
-        return jsonify({"error": "Error de datos", "message": "No se pudieron preparar los datos para el gráfico diario de México."}), 500
