@@ -337,12 +337,12 @@ def chart_mexico_daily():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            result = session.execute(text(\"\"\"
+            result = session.execute(text("""
                 SELECT "Date", "Confirmed_Daily", "Deaths_Daily"
                 FROM covid_data_unified
                 WHERE "Country_Region" = 'Mexico'
                 ORDER BY "Date" ASC
-            \"\"\")).fetchall()
+            """)).fetchall()
 
             df_mexico = pd.DataFrame([{"Date": row.Date, "Confirmed_Daily": row.Confirmed_Daily, "Deaths_Daily": row.Deaths_Daily} for row in result])
             df_mexico['Moving_Average_7_Day'] = df_mexico['Confirmed_Daily'].rolling(window=7, min_periods=1).mean()
