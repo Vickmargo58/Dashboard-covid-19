@@ -23,19 +23,30 @@ def get_global_stats():
         Session = current_app.config['DB_SESSION']
 
         with Session() as session:
-            result = session.execute(text("""
+            # Consulta para obtener total confirmado y muertes de la última fecha
+            latest_stats = session.execute(text("""
                 SELECT
                     SUM("Confirmed") AS total_confirmed,
-                    SUM("Deaths") AS total_deaths,
-                    SUM("Recovered") AS total_recovered -- Incluir Recuperados directamente de la DB
+                    SUM("Deaths") AS total_deaths
                 FROM covid_data_unified
                 WHERE "Date" = (SELECT MAX("Date") FROM covid_data_unified)
             """)).fetchone()
 
-            if result:
-                total_confirmed = result.total_confirmed if result.total_confirmed is not None else 0
-                total_deaths = result.total_deaths if result.total_deaths is not None else 0
-                total_recovered = result.total_recovered if result.total_recovered is not None else 0 # Usar valor de la DB
+            # NUEVO: Consulta para obtener el pico máximo de recuperados en cualquier fecha
+            max_recovered_result = session.execute(text("""
+                SELECT MAX(total_recovered) AS max_global_recovered
+                FROM (
+                    SELECT "Date", SUM("Recovered") AS total_recovered
+                    FROM covid_data_unified
+                    GROUP BY "Date"
+                ) AS daily_recovered
+            """)).fetchone()
+
+            if latest_stats and max_recovered_result:
+                total_confirmed = latest_stats.total_confirmed if latest_stats.total_confirmed is not None else 0
+                total_deaths = latest_stats.total_deaths if latest_stats.total_deaths is not None else 0
+                # Usar el pico máximo histórico para los recuperados globales
+                total_recovered_peak = max_recovered_result.max_global_recovered if max_recovered_result.max_global_recovered is not None else 0
 
                 mortality_rate = 0.0
                 if total_confirmed > 0:
@@ -45,7 +56,7 @@ def get_global_stats():
                     "confirmed": total_confirmed,
                     "deaths": total_deaths,
                     "mortality_rate": f"{mortality_rate:.2f}",
-                    "recovered": total_recovered, # Valor real de la DB
+                    "recovered": total_recovered_peak, # Ahora muestra el pico histórico
                     "last_update": "Marzo 2023" # O puedes obtener la última fecha de la DB
                 }
                 return jsonify(response_data), 200
